@@ -1,0 +1,39 @@
+{% extends "mailing/base.html" %}
+
+{% block content %}
+<h2>Рассылки</h2>
+<a href="{% url 'mailing:mailing_create' %}" class="btn btn-primary mb-3">Создать рассылку</a>
+
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Начало</th>
+      <th>Окончание</th>
+      <th>Статус</th>
+      <th>Сообщение</th>
+      <th>Получатели</th>
+      <th>Действия</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for mailing in object_list %}
+    <tr>
+      <td>{{ mailing.start_time }}</td>
+      <td>{{ mailing.end_time }}</td>
+      <td>{{ mailing.status }}</td>
+      <td>{{ mailing.message.subject }}</td>
+      <td>{{ mailing.recipients.count }} чел.</td>
+      <td>
+        <a href="{% url 'mailing:mailing_detail' mailing.pk %}" class="btn btn-sm btn-outline-info">Подробнее</a>
+        <a href="{% url 'mailing:mailing_update' mailing.pk %}" class="btn btn-sm btn-outline-primary">Изменить</a>
+        <a href="{% url 'mailing:mailing_delete' mailing.pk %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+        {% if mailing.status == 'Запущена' %}
+          <a href="{% url 'mailing:send_mailing' mailing.pk %}" class="btn btn-sm btn-success">Отправить</a>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

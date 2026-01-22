@@ -1,4 +1,4 @@
-[project]
+                 [project]
 name = "djangoproject-01"
 version = "0.1.0"
 description = ""
@@ -12,7 +12,8 @@ dependencies = [
     "django (>=5.2.8,<6.0.0)",
     "python-dotenv (>=1.2.1,<2.0.0)",
     "ipython (>=9.7.0,<10.0.0)",
-    "pillow (>=12.0.0,<13.0.0)"
+    "pillow (>=12.0.0,<13.0.0)",
+    "redis (>=7.1.0,<8.0.0)"
 ]
 
 

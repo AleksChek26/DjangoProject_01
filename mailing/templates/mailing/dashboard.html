@@ -1,0 +1,110 @@
+{% extends "mailing/base.html" %}
+
+{% block title %}Панель управления — Рассылки{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1>Панель управления рассылками</h1>
+
+  <div class="row mt-4">
+    <!-- Карточка: Всего рассылок -->
+    <div class="col-md-4 mb-3">
+      <div class="card text-white bg-primary">
+        <div class="card-body">
+          <h5 class="card-title">Всего рассылок</h5>
+          <p class="card-text display-6">{{ total_mailings }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Карточка: Активных рассылок -->
+    <div class="col-md-4 mb-3">
+      <div class="card text-white bg-success">
+        <div class="card-body">
+          <h5 class="card-title">Активных рассылок</h5>
+          <p class="card-text display-6">{{ active_mailings }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Карточка: Получателей -->
+    <div class="col-md-4 mb-3">
+      <div class="card text-white bg-info">
+        <div class="card-body">
+          <h5 class="card-title">Получателей</h5>
+          <p class="card-text display-6">{{ total_recipients }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Быстрые действия -->
+  <div class="mt-4">
+    <h3>Быстрые действия</h3>
+    <div class="btn-group" role="group" aria-label="Быстрые действия">
+      <a href="{% url 'mailing:mailing_create' %}" class="btn btn-lg btn-outline-primary">Создать рассылку</a>
+      <a href="{% url 'mailing:message_create' %}" class="btn btn-lg btn-outline-secondary">Создать сообщение</a>
+      <a href="{% url 'mailing:recipient_create' %}" class="btn btn-lg btn-outline-success">Добавить получателя</a>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- Последние рассылки -->
+  {% if latest_mailings %}
+    <div class="mt-5">
+      <h3>Последние рассылки</h3>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Тема письма</th>
+            <th>Начало</th>
+            <th>Окончание</th>
+            <th>Статус</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for mailing in latest_mailings %}
+          <tr>
+            <td>{{ mailing.message.subject|truncatewords:10 }}</td>
+            <td>{{ mailing.start_time|date:"d.m.Y H:i" }}</td>
+            <td>{{ mailing.end_time|date:"d.m.Y H:i" }}</td>
+            <td>
+              <span class="badge
+                {% if mailing.status == 'Запущена' %}bg-success{% endif %}
+                {% if mailing.status == 'Завершена' %}bg-secondary{% endif %}
+                {% if mailing.status == 'Создана' %}bg-warning text-dark{% endif %}">
+                {{ mailing.status }}
+              </span>
+            </td>
+            <td>
+              <a href="{% url 'mailing:mailing_detail' mailing.pk %}" class="btn btn-sm btn-outline-info">Подробнее</a>
+              {% if mailing.status == 'Запущена' %}
+                <a href="{% url 'mailing:send_mailing' mailing.pk %}" class="btn btn-sm btn-success">Отправить</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-info mt-5" role="alert">
+      У вас пока нет рассылок. <a href="{% url 'mailing:mailing_create' %}">Создайте первую!</a>
+    </div>
+  {% endif %}
+
+  <!-- Ссылки на списки -->
+  <div class="mt-5">
+    <h3>Ваши данные</h3>
+    <ul class="list-unstyled">
+      <li><a href="{% url 'mailing:mailing_list' %}">Список рассылок</a></li>
+      <li><a href="{% url 'mailing:message_list' %}">Шаблоны сообщений</a></li>
+      <li><a href="{% url 'mailing:recipient_list' %}">Получатели</a></li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
