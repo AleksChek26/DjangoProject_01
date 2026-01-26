@@ -131,6 +131,11 @@ EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 10))
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'LOCATION': os.getenv('CACHE_LOCATION', 'redis://127.0.0.1:6379/1'),
+        'TIMEOUT': int(os.getenv('CACHE_TIMEOUT', '300')),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'PASSWORD': os.getenv('REDIS_PASSWORD') or None,
+        }
     }
 }

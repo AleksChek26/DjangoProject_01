@@ -231,12 +231,25 @@ def send_mailing_view(request, pk):
 def dashboard(request):
     user = request.user
     total_mailings = Mailing.objects.filter(user=user).count()
-    active_mailings = Mailing.objects.filter(user=user, status="Запущена").count()
-    total_recipients = Recipient.objects.filter(mailing__user=user).distinct().count()
+
+    active_mailings = Mailing.objects.filter(
+        user=user,
+        status="Запущена"
+    ).count()
+
+    total_recipients = Recipient.objects.filter(
+        mailings__user=user
+    ).distinct().count()
+
+    latest_mailings = Mailing.objects.filter(
+        user=user
+    ).select_related('message').order_by('-created_at')[:10]
 
     context = {
         "total_mailings": total_mailings,
         "active_mailings": active_mailings,
         "total_recipients": total_recipients,
+        "latest_mailings": latest_mailings,  # передаём в шаблон
     }
+
     return render(request, "mailing/dashboard.html", context)
