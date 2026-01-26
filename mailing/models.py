@@ -1,12 +1,23 @@
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth import get_user_model
+
+def get_default_user():
+    return get_user_model().objects.first().id
 
 
 class Recipient(models.Model):
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=255)
     comment = models.TextField(blank=True, null=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="recipients",
+        verbose_name="Владелец",
+        default=get_default_user
+    )  # владелец получателя
 
     def __str__(self):
         return self.full_name
@@ -16,16 +27,19 @@ class Recipient(models.Model):
         verbose_name_plural = "Получатели"
         permissions = [
             ("can_manage_recipients", "Может управлять получателями"),
-            ("view_recipient", "Может просматривать получателей"),
-            ("add_recipient", "Может добавлять получателей"),
-            ("change_recipient", "Может изменять получателей"),
-            ("delete_recipient", "Может удалять получателей"),
         ]
 
 
 class Message(models.Model):
     subject = models.CharField(max_length=255)
     body = models.TextField()
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="messages",
+        verbose_name="Владелец",
+        default=get_default_user
+    )  # владелец сообщения
 
     def __str__(self):
         return self.subject
@@ -35,10 +49,6 @@ class Message(models.Model):
         verbose_name_plural = "Сообщения"
         permissions = [
             ("can_manage_messages", "Может управлять сообщениями"),
-            ("view_message", "Может просматривать сообщения"),
-            ("add_message", "Может добавлять сообщения"),
-            ("change_message", "Может изменять сообщения"),
-            ("delete_message", "Может удалять сообщения"),
         ]
 
 
@@ -91,10 +101,6 @@ class Mailing(models.Model):
         verbose_name_plural = "Рассылки"
         permissions = [
             ("can_manage_mailings", "Может управлять рассылками"),
-            ("view_mailing", "Может просматривать рассылки"),
-            ("add_mailing", "Может создавать рассылки"),
-            ("change_mailing", "Может изменять рассылки"),
-            ("delete_mailing", "Может удалять рассылки"),
             ("send_mailing", "Может отправлять рассылки"),  # доп. право
         ]
 

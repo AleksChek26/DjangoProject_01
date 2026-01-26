@@ -1,15 +1,30 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 
 
 class Command(BaseCommand):
-    help = 'Создаёт группу «Менеджеры» и назначает базовые разрешения'
+    help = 'Создаёт или обновляет группу "Менеджеры" с разрешениями на управление моделями рассылки'
 
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--remove',
+            action='store_true',
+            help='Удалить разрешения из группы вместо добавления'
+        )
+        parser.add_argument(
+            '--app-label',
+            type=str,
+            default='mailing',
+            help='Имя приложения (app_label) для поиска моделей'
+        )
 
     def handle(self, *args, **options):
-        # Название группы
         group_name = 'Менеджеры'
+        app_label = options['app_label']
+        remove_mode = options['--remove']
 
 
         # Получаем или создаём группу
@@ -17,54 +32,61 @@ class Command(BaseCommand):
         if created:
             self.stdout.write(self.style.SUCCESS(f'Группа "{group_name}" создана.'))
         else:
-            self.stdout.write(f'Группа "{group_name}" уже существует.')
+            self.stdout.write(f'Группа "{group_name}" найдена.')
 
 
-        # Список моделей, для которых назначаем разрешения
-        # Замените your_app на реальное имя вашего приложения
-        models = [
-            'recipient',
-            'message',
-            'mailing',
-        ]
+        # Модели, для которых назначаем разрешения
+        models = ['recipient', 'message', 'mailing']
+        assigned_permissions = []
 
-        # Собираем разрешения
-        permissions_to_assign = []
         for model_name in models:
             try:
+                # Получаем ContentType для модели
                 content_type = ContentType.objects.get(
-                    app_label='accounts',
+                    app_label=app_label,
                     model=model_name
                 )
-                # Добавляем разрешения: add, change, delete
-                for perm_codename in ['add', 'change', 'delete']:
-                    perm_name = f'{perm_codename}_{model_name}'
+                # Собираем разрешения: add, change, delete, view
+                for action in ['add', 'change', 'delete', 'view']:
+                    codename = f'{action}_{model_name}'
                     try:
                         permission = Permission.objects.get(
                             content_type=content_type,
-                            codename=perm_name
-                )
-                        permissions_to_assign.append(permission)
+                            codename=codename
+                        )
+                        assigned_permissions.append(permission)
                     except Permission.DoesNotExist:
                         self.stdout.write(
                             self.style.WARNING(
-                                f'Разрешение {perm_name} не найдено.'
+                                f'Разрешение {codename} не найдено для {app_label}.{model_name}.'
                             )
                         )
             except ContentType.DoesNotExist:
                 self.stdout.write(
-                    self.style.WARNING(
-                        f'Модель {model_name} не найдена в приложении your_app.'
+                    self.style.ERROR(
+                        f'Модель {model_name} не найдена в приложении {app_label}.'
                     )
                 )
 
-        # Назначаем разрешения группе
-        if permissions_to_assign:
-            group.permissions.set(permissions_to_assign)
+        # Применяем изменения
+        if remove_mode:
+            # Удаляем разрешения из группы
+            group.permissions.remove(*assigned_permissions)
             self.stdout.write(
                 self.style.SUCCESS(
-                    f'Назначено {len(permissions_to_assign)} разрешений группе "{group_name}".'
+                    f'Разрешения удалены из группы "{group_name}".'
                 )
             )
         else:
-            self.stdout.write(f'Не найдено разрешений для назначения.')
+            # Добавляем разрешения в группу
+            group.permissions.add(*assigned_permissions)
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f'Разрешения назначены группе "{group_name}".'
+                )
+            )
+
+        # Выводим итоговый список разрешений группы
+        self.stdout.write('Текущие разрешения группы:')
+        for perm in group.permissions.all():
+            self.stdout.write(f'  {perm.codename}')
