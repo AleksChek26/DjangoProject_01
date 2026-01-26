@@ -1,0 +1,27 @@
+{% extends "mailing/base.html" %}
+
+
+{% block content %}
+
+<h1>{% if mailing %}Редактировать рассылку{% else %}Создать рассылку{% endif %}</h1>
+<form method="post">
+  {% csrf_token %}
+  <div>
+    <label>Название:</label>
+    <input type="text" name="name" value="{{ mailing.name }}" required>
+  </div>
+  <div>
+    <label>Сообщение:</label>
+    <select name="message" required>
+      {% for msg in messages %}
+        <option value="{{ msg.id }}" {% if msg.id == mailing.message.id %}selected{% endif %}>
+          {{ msg.subject }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <!-- Добавьте поля для recipients, статуса и т.п. -->
+  <button type="submit">Сохранить</button>
+</form>
+
+{% endblock %}
